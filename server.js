@@ -15,7 +15,7 @@ app.use(session(
 
 
 /* handling all the parsing */
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(express.static(publicPath));
 
 /* paypal configuration */
@@ -26,8 +26,8 @@ paypal.configure({
 });
 
 app.post('/post_info', async (req,res)=>{
-  var email = req.body.email;
-  var amount = req.body.amount;
+  const email = req.body.email;
+  const amount = req.body.amount;
 
   if(amount <= 1){
     return_info = {};
@@ -35,10 +35,10 @@ app.post('/post_info', async (req,res)=>{
     return_info.message = "The amount should be greater than 1";
     return res.send(return_info);
   }
-  var fee_amount = amount * 0.9;
-  var result = await save_user_information({"amount" : fee_amount, "email" : email});
+  let fee_amount = amount * 0.9;
+  let result = await save_user_information({"amount" : fee_amount, "email" : email});
   req.session.paypal_amount = amount;
-  var create_payment_json = {
+  let create_payment_json = {
     "intent": "sale",
     "payer": {
         "payment_method": "paypal"
@@ -75,7 +75,7 @@ paypal.payment.create(create_payment_json, function (error, payment) {
     } else {
         console.log("Create Payment Response");
         console.log(payment);
-        for(var i = 0; i< payment.links.length; i++){
+        for(let i = 0; i< payment.links.length; i++){
           if(payment.links[i].rel =='approval_url'){
             return res.send(payment.links[i].href);
           }
@@ -87,7 +87,7 @@ paypal.payment.create(create_payment_json, function (error, payment) {
 app.get('/success', async (req,res)=>{
   const payerId = req.query.PayerID;
   const paymentId = req.query.paymentId;
-  var execute_payment_json = {
+  let execute_payment_json = {
     "payer_id": payerId,
     "transactions": [{
         "amount": {
@@ -108,35 +108,35 @@ app.get('/success', async (req,res)=>{
   });
   /* delete all mysql users */
   if(req.session.winner_picked){
-    var deleted = await delete_users();
+    const deleted = await delete_users();
   }
   req.session.winner_picked = false;
   res.redirect('http://localhost:3000');
 });
 
 app.get('/get_total_amount', async (req,res)=>{
-  var result = await get_total_amount();
+  const result = await get_total_amount();
   res.send(result);
 });
 
 app.get('/pick_winner', async (req,res)=>{
-  var result = await get_total_amount();
-  var total_amount = result[0].total_amount;
+  const result = await get_total_amount();
+  let total_amount = result[0].total_amount;
   req.session.paypal_amount = total_amount;
 
   /* Placeholder for picking the winner ,
   1) We need to write a query to get a list of all the participants
   2) we need to pick a winner */
-  var list_of_participants = await get_list_of_participants();
+  const list_of_participants = await get_list_of_participants();
   list_of_participants = JSON.parse(JSON.stringify(list_of_participants));
-  var email_array = [];
+  let email_array = [];
   list_of_participants.forEach(function(element){
     email_array.push(element.email);
   });
-  var winner_email = email_array[Math.floor(Math.random()* email_array.length)];
+  let winner_email = email_array[Math.floor(Math.random()* email_array.length)];
   req.session.winner_picked = true;
   /* Create paypal payment */
-  var create_payment_json = {
+  let create_payment_json = {
     "intent": "sale",
     "payer": {
         "payment_method": "paypal"

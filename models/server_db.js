@@ -1,4 +1,4 @@
-var db = require('../db.js');
+const db = require('../db.js');
 
 save_user_information = (data) => new Promise((resolve,reject)=>{
   db.query('INSERT INTO lottery_information SET ?',data, function(err,results, fields){
